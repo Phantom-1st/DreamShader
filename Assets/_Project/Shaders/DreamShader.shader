@@ -59,5 +59,20 @@
 				#pragma fragment frag
 			ENDCG
 		}
+
+		Pass
+		{
+			Tags
+			{
+				"LightMode" = "ShadowCaster"
+			}
+
+			CGPROGRAM
+				#pragma target 3.0
+
+#pragma vertex vert
+#
+			ENDCG
+		}
     }
 }
