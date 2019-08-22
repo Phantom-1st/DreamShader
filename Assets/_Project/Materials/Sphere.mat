@@ -68,7 +68,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HighlightScale: 0.0216
+    - _HighlightScale: 0.01
     - _HighlightStrength: 1
     - _Metallic: 0
     - _Mode: 0
@@ -86,4 +86,4 @@ Material:
     - _Color: {r: 0.3482941, g: 0.60784316, b: 0.60351735, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GradientColor: {r: 0.34901962, g: 0.5737727, b: 0.60784316, a: 1}
-    - _HighlightColor: {r: 1, g: 0.85882354, b: 0.654902, a: 1}
+    - _HighlightColor: {r: 0.84705883, g: 0.6901961, b: 0.4627451, a: 1}

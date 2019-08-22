@@ -15,6 +15,8 @@
 
 		_HighlightColor("HighlightColor", Color) = (1,1,1,1)
 		_HighlightScale("HighlightScale", Range(0,.1)) = .01
+		_Noise("NoiseTex", 2D) = "white" {}
+		_RandomStrength("RandomStrength", Range(0,.01)) = 1
 	}
 
 	SubShader
@@ -86,6 +88,9 @@
 				// Properties (don't forget to add to Properties block!!!)
 				uniform float4 _HighlightColor;
 				uniform float _HighlightScale;
+				uniform float _RandomStrength;
+				sampler2D _Noise;
+				sampler2D _MainTex;
 
 				// we'll need all of this information later!
 				struct vertexInput
@@ -114,10 +119,14 @@
 					float3 normal = normalize(mul(normal4, unity_WorldToObject).xyz);
 					float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
 
+					float4 screenPos = ComputeScreenPos(input.vertex);
+
 					float lightDot = 1 - dot(WorldSpaceViewDir(input.vertex), UnityObjectToWorldNormal(input.normal)); //saturate(dot(normal, lightDir));
 					lightDot *= saturate(dot(normal, lightDir));
 					// scale the vertex along the normal direction
-					newPos += float4(input.normal, 0.0) * lightDot * _HighlightScale;
+					float noiseAmount = (1 - tex2Dlod(_Noise, screenPos / input.vertex.w)) * _RandomStrength;
+					noiseAmount = saturate(noiseAmount / _HighlightScale);
+					newPos += float4(input.normal, 0.0) * lightDot * _HighlightScale + noiseAmount;
 
 					output.pos = UnityObjectToClipPos(newPos);
 					return output;
