@@ -105,16 +105,28 @@
 		i.viewDir = normalize(i.viewDir);
 
 		#if defined(POINT) || defined(SPOT)
-			UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
-			//attenuation = (2.00 * attenuation) - 1.00;
-			float3 lightDir = attenuation * 4;
+			float3 lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
 		#else
 			float3 lightDir = _WorldSpaceLightPos0.xyz;
 		#endif
 
 		float lightNormalDot = dot(lightDir.xyz, i.worldNormal);
 
+		#if defined(POINT) || defined(SPOT)
+			UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
+			lightNormalDot = attenuation * 4* ((lightNormalDot + 1.00) / 2.00);
+			lightNormalDot = (2.00 * lightNormalDot) - 1.00;
+		#endif
+
 		float lightAmount = LightAmount(lightNormalDot);
+
+		 #if(SHADOWS_SCREEN)
+			float shadowAmount = tex2D(_ShadowMapTexture, i.screenPos / i.vertex.w);
+		#else
+			float shadowAmount = 1;
+		#endif
+
+		lightAmount = lightAmount * shadowAmount;
 
 		float backLightNormalDot = 1 - dot(i.viewDir, i.worldNormal);
 		float backLightAmount = backLightNormalDot * pow(lightNormalDot, 1 - _BackLightExtension);

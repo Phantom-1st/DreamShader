@@ -32,6 +32,8 @@
             CGPROGRAM
 				#pragma target 3.0
 
+				#pragma multi_compile _ SHADOWS_SCREEN
+
 				#include "DreamShaderInclude.cginc"
 				#pragma vertex vert
 				#pragma fragment frag
@@ -52,7 +54,8 @@
 			CGPROGRAM
 				#pragma target 3.0
 
-				#pragma multi_compile DIRECTIONAL POINT SPOT
+				//#pragma multi_compile DIRECTIONAL POINT SPOT SHADOWS_DEPTH SHADOWS_SCREEN SHADOWS_CUBE SHADOWS_SOFT 
+				#pragma multi_compile_fwdadd_fullshadows
 
 				#include "DreamShaderInclude.cginc"
 				#pragma vertex vert
@@ -70,8 +73,12 @@
 			CGPROGRAM
 				#pragma target 3.0
 
-#pragma vertex vert
-#
+				#pragma multi_compile_shadowcaster
+
+				#include "DreamShadows.cginc"
+				#pragma vertex shadowVert
+				#pragma fragment shadowFrag
+
 			ENDCG
 		}
     }

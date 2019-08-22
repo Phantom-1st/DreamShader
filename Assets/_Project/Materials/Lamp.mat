@@ -63,7 +63,7 @@ Material:
     - _BackLightExtension: 0.63
     - _BackLightOffset: 0.01
     - _BackLightSmoothing: 0.0817
-    - _BackLightStrength: 1
+    - _BackLightStrength: 0
     - _BackLightWidth: 0.284
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -85,6 +85,6 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.63355684, g: 0.6473384, b: 0.81960785, a: 1}
+    - _Color: {r: 1, g: 0.9562012, b: 0.55200005, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GradientColor: {r: 0.89664197, g: 0.678, b: 1, a: 1}
+    - _GradientColor: {r: 1, g: 0.5962015, b: 0.35000002, a: 1}
