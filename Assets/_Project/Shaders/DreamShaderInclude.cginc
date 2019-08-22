@@ -2,7 +2,8 @@
 	#define DREAM_SHADER_INCLUDED
 
 
-	#include "UnityStandardBRDF.cginc"
+	//#include "UnityStandardBRDF.cginc"
+	#include "UnityPBSLighting.cginc"
 	#include "AutoLight.cginc"
 
 	struct appdata
@@ -14,13 +15,14 @@
 
 	struct v2f
 	{
-		float4 vertex : SV_POSITION;
+		float4 pos : SV_POSITION;
 		float2 uv : TEXCOORD0;
 		float3 normal : NORMAL;
 		float3 worldNormal : TEXCOORD1;
 		float3 viewDir: TEXCOORD2;
 		float4 screenPos : TEXCOORD3;
 		float3 worldPos : TEXCOORD4;
+		SHADOW_COORDS(5)
 	};
 
 	sampler2D _MainTex;
@@ -36,18 +38,21 @@
 	float _BackLightSmoothing;
 	float _BackLightExtension;
 
+	float4 _HighlightColor;
+
 	v2f vert(appdata v)
 	{
 		v2f o;
 
-		o.vertex = UnityObjectToClipPos(v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 		o.viewDir = WorldSpaceViewDir(v.vertex);
-		o.screenPos = ComputeScreenPos(o.vertex);
+		o.screenPos = ComputeScreenPos(o.pos);
 		o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 
 		o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 		o.normal = v.normal;
 		o.worldNormal = UnityObjectToWorldNormal(v.normal);
+		TRANSFER_SHADOW(o);
 
 		return o;
 	}
@@ -98,6 +103,13 @@
 		return final;
 	}
 
+	float3 ApplyFog(float3 color, v2f i) 
+	{
+		float viewDistance = length(_WorldSpaceCameraPos - i.worldPos);
+		UNITY_CALC_FOG_FACTOR_RAW(viewDistance);
+		return lerp(unity_FogColor, color, saturate(unityFogFactor)).rgb;
+	}
+
 	fixed4 frag(v2f i) : SV_Target
 	{
 		i.normal = normalize(i.normal);
@@ -120,8 +132,13 @@
 
 		float lightAmount = LightAmount(lightNormalDot);
 
-		 #if(SHADOWS_SCREEN)
-			float shadowAmount = tex2D(_ShadowMapTexture, i.screenPos / i.vertex.w);
+		#if(SHADOWS_SCREEN)
+			//float shadowAmount = 1;													//No shadows
+			//float shadowAmount = SHADOW_ATTENUATION(i);
+			//float shadowAmount = UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos); // Doesn't work.
+			//float shadowAmount = tex2D(_ShadowMapTexture, i.screenPos / i.vertex.w);
+
+			float shadowAmount = tex2Dproj(_ShadowMapTexture, UNITY_PROJ_COORD(i._ShadowCoord)).r;
 		#else
 			float shadowAmount = 1;
 		#endif
@@ -150,6 +167,9 @@
 		float3 baseMergeTexCol = lerp(baseCol.rgb, texCol.rgb, texCol.a);
 
 		float3 finalColor = baseMergeTexCol * combinedLightCol;
+		//#if defined(FOG_LINEAR)
+		//	finalColor = ApplyFog(finalColor, i).rgb;
+		//#endif
 
 		return float4(finalColor, 1);
 		//return finalColor * float4(i.normal,1) + .5; // Show Normals
