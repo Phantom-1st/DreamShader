@@ -16,7 +16,8 @@
 		_HighlightColor("HighlightColor", Color) = (1,1,1,1)
 		_HighlightScale("HighlightScale", Range(0,.1)) = .01
 		_Noise("NoiseTex", 2D) = "white" {}
-		_RandomStrength("RandomStrength", Range(0,.01)) = 1
+		_RandomStrength("RandomStrength", Range(0,2)) = 1
+		_NoiseScaling("NoiseScaling", Range(.0001, 2)) = 1
 	}
 
 	SubShader
@@ -72,6 +73,39 @@
 			ENDCG
 		}
 
+		//Meta (Emmision)
+		/*
+		Pass
+		{
+			Name "META"
+			Tags {"LightMode" = "Meta"}
+			Cull Off
+
+			CGPROGRAM
+				#include "UnityStandardMeta.cginc"
+				#pragma vertex vert_meta
+				#pragma fragment frag_meta_custom
+				
+				#pragma shader_feature _EMISSION
+
+				fixed4 frag_meta_custom(v2f_meta i) : SV_Target
+				{
+					// Colors                
+					fixed4 col = fixed4(1,0,0,1); // The emission color
+
+					// Calculate emission
+					UnityMetaInput metaIN;
+					UNITY_INITIALIZE_OUTPUT(UnityMetaInput, metaIN);
+					metaIN.Albedo = col.rgb * 5;
+					metaIN.Emission = col.rgb * 5;
+					return UnityMetaFragment(metaIN);
+
+					//return col * 5;
+				}
+			ENDCG
+		}
+		*/
+
 		//Highlight
 		Pass
 		{
@@ -91,21 +125,24 @@
 				uniform float _RandomStrength;
 				sampler2D _Noise;
 				sampler2D _MainTex;
+				uniform float _NoiseScaling;
 
 				// we'll need all of this information later!
 				struct vertexInput
 				{
-				  float4 vertex : POSITION;
-				  float3 normal : NORMAL;
-				  float3 texCoord : TEXCOORD0;
-				  float4 color : TEXCOORD1;
+					float4 vertex : POSITION;
+					float3 normal : NORMAL;
+					float3 texCoord : TEXCOORD0;
+					float4 color : TEXCOORD1;
 				};
 
 				// since we're just drawing a flat color,
 				// we only need the vertex position in our vertex output.
 				struct vertexOutput
 				{
-				  float4 pos : SV_POSITION;
+					float4 pos : SV_POSITION;
+					float3 worldPos : TEXCOORD0;
+					//float noise : TEXCOORD1;
 				};
 
 				vertexOutput vert(vertexInput input)
@@ -120,21 +157,27 @@
 					float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
 
 					float4 screenPos = ComputeScreenPos(input.vertex);
+					output.worldPos = mul(unity_ObjectToWorld, input.vertex);
 
 					float lightDot = 1 - dot(WorldSpaceViewDir(input.vertex), UnityObjectToWorldNormal(input.normal)); //saturate(dot(normal, lightDir));
 					lightDot *= saturate(dot(normal, lightDir));
+
+					float lookup = fmod(length(output.worldPos) * _NoiseScaling, 1);
+					float noiseAmount = tex2Dlod(_Noise, float4(lookup, 0, 0, 0));
+					noiseAmount = (2 * noiseAmount) - 1;
+					noiseAmount *= _RandomStrength;
+
 					// scale the vertex along the normal direction
-					float noiseAmount = (1 - tex2Dlod(_Noise, screenPos / input.vertex.w)) * _RandomStrength;
-					noiseAmount = saturate(noiseAmount / _HighlightScale);
 					newPos += float4(input.normal, 0.0) * lightDot * _HighlightScale + noiseAmount;
 
-					output.pos = UnityObjectToClipPos(newPos);
+					output.pos = UnityObjectToClipPos(newPos); // was newPos
+
 					return output;
 				}
 
 				float4 frag(vertexOutput input) : COLOR
 				{
-				  return _HighlightColor;
+					return _HighlightColor;
 				}
 			ENDCG
 		}

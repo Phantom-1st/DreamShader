@@ -22,6 +22,7 @@
 		float3 viewDir: TEXCOORD2;
 		float4 screenPos : TEXCOORD3;
 		float3 worldPos : TEXCOORD4;
+
 		SHADOW_COORDS(5)
 	};
 
